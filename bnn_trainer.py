@@ -2,18 +2,14 @@ from pathlib import Path
 
 import torch
 import pyro
-from pyro.infer import SVI, Trace_ELBO
-from pyro.optim import Adam
 
 from bnn import net, model, guide, device
 from data_loader import train_loader, test_loader
 
-optim = Adam({"lr": 0.01})
-svi = SVI(model, guide, optim, loss=Trace_ELBO())
+optim = pyro.optim.Adam({"lr": 0.01})
+svi = pyro.infer.SVI(model, guide, optim, loss=pyro.infer.Trace_ELBO())
 
 epochs = 5
-loss = 0
-
 for j in range(epochs):
     loss = 0
     for batch_id, (x, y) in enumerate(train_loader):

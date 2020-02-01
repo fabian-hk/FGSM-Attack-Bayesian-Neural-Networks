@@ -38,5 +38,4 @@ pertubed_data = fgsm_attack(example_reshaped, 0.09, data_grad)
 pred = model(pertubed_data.view(-1, 28 * 28))
 print(pred.data.max(1, keepdim=True))
 
-plt.imshow(pertubed_data[0][0].detach(), cmap="gray", vmin=0, vmax=1)
-plt.show()
+
