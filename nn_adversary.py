@@ -27,7 +27,7 @@ net.zero_grad()
 loss.backward()
 data_grad = example_reshaped.grad.data
 
-pertubed_data = fgsm_attack(example_reshaped, 0.15, data_grad)
+pertubed_data = fgsm_attack(example_reshaped, 0.3, data_grad)
 
 pred = net(pertubed_data.view(-1, 28 * 28).to(net.device))
 print(f"Model under attack: Label = {label.item()}, Prediction: {pred.data.max(1).indices.item()}")

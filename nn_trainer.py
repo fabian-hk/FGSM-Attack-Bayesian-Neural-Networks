@@ -5,28 +5,22 @@ import torch.optim as optim
 from helper.data_loader import test_loader, train_loader
 from networks import Network
 
-n_epochs = 2
-batch_size = 128
 
-net = Network()
-
-
-def train(epoch):
-    optimizer = optim.Adam(net.parameters(), lr=0.01)
+def train(net: Network, optimizer: torch.optim.Adam, epoch: int):
     net.train()
-    for batch_idx, (data, target) in enumerate(train_loader):
+    for batch_idx, (x, y) in enumerate(train_loader):
         optimizer.zero_grad()
-        output = net(data.view(-1, 28 * 28).to(net.device))
-        loss = F.nll_loss(output, target.to(net.device))
+        output = net(x.view(-1, 28 * 28).to(net.device))
+        loss = F.nll_loss(output, y.to(net.device))
         loss.backward()
         optimizer.step()
         if batch_idx % 100 == 0:
             print(
-                f"Train Epoch: {epoch}, Step: {batch_idx*len(data)}/{len(train_loader.dataset)}, Loss: {loss.item()}"
+                f"Train Epoch: {epoch}, Step: {batch_idx*len(x)}/{len(train_loader.dataset)}, Loss: {loss.item()}"
             )
 
 
-def test():
+def test(net: Network):
     net.eval()
     test_loss = 0
     correct = 0
@@ -45,9 +39,18 @@ def test():
         )
 
 
-if __name__ == "__main__":
+def training():
+    n_epochs = 2
+
+    net = Network()
+    optimizer = optim.Adam(net.parameters(), lr=0.01)
+
     for epoch in range(n_epochs):
-        train(epoch)
-        test()
+        train(net, optimizer, epoch)
+        test(net)
 
     net.save_model()
+
+
+if __name__ == "__main__":
+    training()
