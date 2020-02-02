@@ -1,4 +1,3 @@
 .idea/
 tf_model/
-saved_models/
-data_set/
+data/

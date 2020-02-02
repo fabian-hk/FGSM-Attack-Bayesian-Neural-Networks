@@ -2,10 +2,10 @@ import torch
 import pyro
 
 from networks import BNNWrapper
-from helper.data_loader import train_loader, test_loader
+from helper.data_loader import get_train_loader, get_test_loader
 
 
-def train(svi: pyro.infer.SVI, bnn: BNNWrapper, epoch: int):
+def train(svi: pyro.infer.SVI, bnn: BNNWrapper, train_loader: torch.utils.data.DataLoader, epoch: int):
     for batch_id, (x, y) in enumerate(train_loader):
         x = x.to(bnn.device)
         y = y.to(bnn.device)
@@ -18,17 +18,23 @@ def train(svi: pyro.infer.SVI, bnn: BNNWrapper, epoch: int):
             )
 
 
-def test(bnn: BNNWrapper):
+def test(bnn: BNNWrapper, loss_fn: pyro.infer.Trace_ELBO, test_loader: torch.utils.data.DataLoader):
     correct = 0.0
     total = 0.0
-    for j, (x, y) in enumerate(test_loader):
-        x = x.to(bnn.device)
-        y = y.to(bnn.device)
-        mean, var = bnn.predict(x.view(-1, 28 * 28))
-        total += y.size(0)
-        correct += torch.eq(mean.max(1).indices, y).sum().item()
+    test_loss = 0.0
+    with torch.no_grad():
+        for j, (x, y) in enumerate(test_loader):
+            x = x.to(bnn.device)
+            y = y.to(bnn.device)
+            mean, var = bnn.predict(x.view(-1, 28 * 28))
+            total += y.size(0)
+            correct += torch.eq(mean.max(1).indices, y).sum().item()
+            test_loss += loss_fn(bnn.model, bnn.guide, x_data=x.view(-1, 28 * 28), y_data=y)
 
-    print(f"Test set accuracy: {correct / total}")
+    test_loss /= len(test_loader.dataset)
+    print(
+        f"\nTest set, Average loss: {test_loss}, Accuracy: {float(correct) / float(len(test_loader.dataset))}\n"
+    )
 
 
 def training():
@@ -37,10 +43,15 @@ def training():
     optim = pyro.optim.Adam({"lr": 0.01})
     svi = pyro.infer.SVI(bnn.model, bnn.guide, optim, loss=pyro.infer.Trace_ELBO())
 
+    loss_fn = pyro.infer.Trace_ELBO(num_particles=20).differentiable_loss
+
+    train_loader = get_train_loader()
+    test_loader = get_test_loader()
+
     epochs = 5
     for epoch in range(epochs):
-        train(svi, bnn, epoch)
-        test(bnn)
+        train(svi, bnn, train_loader, epoch)
+        test(bnn, loss_fn, test_loader)
 
     bnn.save_model()
 

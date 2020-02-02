@@ -27,12 +27,12 @@ class Network(nn.Module):
         return F.log_softmax(output, dim=1)
 
     def save_model(self):
-        save_path = Path("saved_models/")
-        save_path.mkdir(exist_ok=True, parents=False)
+        save_path = Path("data/saved_models/")
+        save_path.mkdir(exist_ok=True, parents=True)
         torch.save(self.state_dict(), save_path.joinpath("model.pt"))
 
     def load_model(self):
-        save_path = Path("saved_models/")
+        save_path = Path("data/saved_models/")
         if not save_path.exists():
             raise FileExistsError()
 
@@ -128,12 +128,12 @@ class BNNWrapper(Network):
 
     def save_model(self):
         # save parameters from the pyro module not pytorch itself
-        save_path = Path("saved_models/")
-        save_path.mkdir(exist_ok=True, parents=False)
+        save_path = Path("data/saved_models/")
+        save_path.mkdir(exist_ok=True, parents=True)
         pyro.get_param_store().save(save_path.joinpath("bnn_params.pr"))
 
     def load_model(self):
-        save_path = Path("saved_models/")
+        save_path = Path("data/saved_models/")
         if not save_path.exists():
             raise FileExistsError()
 

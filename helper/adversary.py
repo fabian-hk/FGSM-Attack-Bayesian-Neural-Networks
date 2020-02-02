@@ -1,5 +1,6 @@
 import torch
 
+
 # FGSM attack code
 def fgsm_attack(image, epsilon, data_grad):
     # Collect the element-wise sign of the data gradient
