@@ -26,7 +26,7 @@ def get_train_loader(batch_size: Optional[int] = 128):
     )
 
 
-def get_test_loader(batch_size: Optional[int] = 128):
+def get_test_loader(batch_size: Optional[int] = 128, shuffle: Optional[bool] = True):
     return torch.utils.data.DataLoader(
         torchvision.datasets.MNIST(
             create_folder(),
@@ -36,5 +36,5 @@ def get_test_loader(batch_size: Optional[int] = 128):
             ),
         ),
         batch_size=batch_size,
-        shuffle=True,
+        shuffle=shuffle,
     )

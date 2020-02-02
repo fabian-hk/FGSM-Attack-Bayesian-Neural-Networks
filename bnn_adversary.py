@@ -1,6 +1,7 @@
-from typing import List, Dict
+from typing import List
 from pathlib import Path
-import pickle
+
+import pandas
 
 import torch
 import pyro
@@ -16,8 +17,8 @@ def run_attack(
     x: torch.Tensor,
     y: torch.Tensor,
     epsilons: List[float],
-    result: Dict,
-):
+    batch_id: int,
+) -> pandas.DataFrame:
     x = x.to(bnn.device)
     y = y.to(bnn.device)
 
@@ -28,20 +29,21 @@ def run_attack(
 
     data_grad = x.grad.data
 
+    tmp_dict = {"id": [], "epsilon": [], "y": [], "y_": [], "std": []}
     for epsilon in epsilons:
         pertubed_data = fgsm_attack(x, epsilon, data_grad)
         mean, std = bnn.predict(pertubed_data.view(-1, 28 * 28))
 
-        c = mean.max(1).indices.item()
+        y_ = mean.max(1).indices.item()
+        std_ = std[0][y_].item()
 
-        if mean.max(1).indices == y:
-            result[f"{epsilon}_correct"] += 1
-        else:
-            result[f"{epsilon}_wrong"] += 1
+        tmp_dict["id"].append(batch_id)
+        tmp_dict["epsilon"].append(epsilon)
+        tmp_dict["y"].append(y.item())
+        tmp_dict["y_"].append(y_)
+        tmp_dict["std"].append(std_)
 
-        result[f"{epsilon}_std"].append(std[0][c].item())
-
-        print(f"Label: {y.item()}, Prediction: {c}, Standard deviation: {std[0][c]}")
+    return pandas.DataFrame.from_dict(tmp_dict)
 
 
 if __name__ == "__main__":
@@ -49,17 +51,20 @@ if __name__ == "__main__":
     bnn.load_model()
     loss_fn = pyro.infer.Trace_ELBO(num_particles=20).differentiable_loss
 
-    epsilons = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    test_loader = get_test_loader(batch_size=1, shuffle=False)
 
-    result = {}
-    for epsilon in epsilons:
-        result[f"{epsilon}_correct"] = 0
-        result[f"{epsilon}_wrong"] = 0
-        result[f"{epsilon}_std"] = []
+    epsilons = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 
-    for x, y in get_test_loader(1):
-        run_attack(bnn, loss_fn, x, y, epsilons, result)
+    result = []  # type: List[pandas.DataFrame]
+    for batch_id, (x, y) in enumerate(test_loader):
+        result.append(run_attack(bnn, loss_fn, x, y, epsilons, batch_id))
+
+        if batch_id % 1000 == 0:
+            print(f"Step {batch_id}/{len(test_loader.dataset)}")
+
+    result_df = pandas.concat(result)  # type: pandas.DataFrame
+    result_df.reset_index(inplace=True, drop=True)
 
     result_path = Path("data/")
     result_path.mkdir(exist_ok=True, parents=False)
-    pickle.dump(result, result_path.joinpath("bnn_result.p").open("wb"))
+    result_df.to_csv(result_path.joinpath("bnn_result.csv"))
