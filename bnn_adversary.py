@@ -9,6 +9,7 @@ import pyro
 from networks import BNNWrapper
 from helper.data_loader import get_test_loader
 from helper.adversary import fgsm_attack
+from helper.config import Configuration
 
 
 def run_attack(
@@ -65,6 +66,7 @@ if __name__ == "__main__":
     result_df = pandas.concat(result)  # type: pandas.DataFrame
     result_df.reset_index(inplace=True, drop=True)
 
+    config = Configuration()
     result_path = Path("data/")
     result_path.mkdir(exist_ok=True, parents=False)
-    result_df.to_csv(result_path.joinpath("bnn_result.csv"))
+    result_df.to_csv(result_path.joinpath(f"{config.id}_bnn_result.csv"))
