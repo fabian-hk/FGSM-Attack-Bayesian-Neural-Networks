@@ -45,6 +45,7 @@ def accuracy_over_epsilon(
 def std_over_epsilon(bnn_df: pandas.DataFrame, config: Configuration):
     corr_y = []
     wro_y = []
+    eps_y = []
     epsilons = config.epsilons
     for epsilon in epsilons:
         corr_eps = bnn_df.loc[
@@ -53,14 +54,17 @@ def std_over_epsilon(bnn_df: pandas.DataFrame, config: Configuration):
         wro_eps = bnn_df.loc[
             (bnn_df["epsilon"] == epsilon) & bnn_df["y"] != bnn_df["y_"]
         ]  # type: pandas.DataFrame
+        eps = bnn_df.loc[bnn_df["epsilon"] == epsilon] # type: pandas.DataFrame
         corr_y.append(corr_eps["std"].mean())
         wro_y.append(wro_eps["std"].mean())
+        eps_y.append(eps["std"].mean())
 
     config.correct_std = float(np.mean(corr_y))
     config.wrong_std = float(np.mean(wro_y))
 
-    plt.plot(epsilons, corr_y, label="Correct STD")
-    plt.plot(epsilons, wro_y, label="Wrong STD")
+    plt.plot(epsilons, corr_y, label="Average correct STD")
+    plt.plot(epsilons, wro_y, label="Average wrong STD")
+    plt.plot(epsilons, eps_y, label="Average STD")
     plt.xlabel("Epsilon")
     plt.ylabel("STD")
     plt.legend()
