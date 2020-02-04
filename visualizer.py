@@ -36,7 +36,7 @@ def accuracy_over_epsilon(
     plt.ylabel("Accuracy")
     plt.legend()
 
-    plot_path = Path(f"data/{config.id}_accuracy.svg")
+    plot_path = Path(f"data/{config.id:02}_accuracy.svg")
     plt.savefig(plot_path)
     plt.show()
     plt.close()
@@ -54,7 +54,7 @@ def std_over_epsilon(bnn_df: pandas.DataFrame, config: Configuration):
         wro_eps = bnn_df.loc[
             (bnn_df["epsilon"] == epsilon) & bnn_df["y"] != bnn_df["y_"]
         ]  # type: pandas.DataFrame
-        eps = bnn_df.loc[bnn_df["epsilon"] == epsilon] # type: pandas.DataFrame
+        eps = bnn_df.loc[bnn_df["epsilon"] == epsilon]  # type: pandas.DataFrame
         corr_y.append(corr_eps["std"].mean())
         wro_y.append(wro_eps["std"].mean())
         eps_y.append(eps["std"].mean())
@@ -69,7 +69,7 @@ def std_over_epsilon(bnn_df: pandas.DataFrame, config: Configuration):
     plt.ylabel("STD")
     plt.legend()
 
-    plot_path = Path(f"data/{config.id}_std.svg")
+    plot_path = Path(f"data/{config.id:02}_std.svg")
     plt.savefig(plot_path)
     plt.show()
     plt.close()
@@ -105,7 +105,7 @@ def accuracy_over_epsilon_with_rejection(
     plt.ylabel("Accuracy")
     plt.legend()
 
-    plot_path = Path(f"data/{config.id}_accuracy_with_rejection.svg")
+    plot_path = Path(f"data/{config.id:02}_accuracy_with_rejection.svg")
     plt.savefig(plot_path)
     plt.show()
     plt.close()
@@ -114,8 +114,8 @@ def accuracy_over_epsilon_with_rejection(
 def visualize():
     config = Configuration()
 
-    bnn_df = load_dict("bnn_result.csv")
-    nn_df = load_dict("nn_result.csv")
+    bnn_df = load_dict(f"{config.id:02}_bnn_result.csv")
+    nn_df = load_dict(f"{config.id:02}_nn_result.csv")
 
     accuracy_over_epsilon(bnn_df, nn_df, config)
 

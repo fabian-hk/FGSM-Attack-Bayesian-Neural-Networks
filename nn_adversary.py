@@ -44,6 +44,8 @@ def run_attack(
 
 
 if __name__ == "__main__":
+    config = Configuration()
+
     net = Network()
     net.load_model()
 
@@ -51,19 +53,16 @@ if __name__ == "__main__":
 
     test_loader = get_test_loader(batch_size=1, shuffle=False)
 
-    epsilons = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-
     result = []
     for batch_id, (x, y) in enumerate(test_loader):
-        result.append(run_attack(net, x, y, epsilons, batch_id))
+        result.append(run_attack(net, x, y, config.epsilons, batch_id))
 
-        if batch_id % 1000 == 0:
+        if batch_id % 100 == 0:
             print(f"Step {batch_id}/{len(test_loader.dataset)}")
 
     result_df = pandas.concat(result)  # type: pandas.DataFrame
     result_df.reset_index(inplace=True, drop=True)
 
-    config = Configuration()
     result_path = Path("data/")
     result_path.mkdir(exist_ok=True, parents=False)
-    result_df.to_csv(result_path.joinpath(f"{config.id}_nn_result.csv"))
+    result_df.to_csv(result_path.joinpath(f"{config.id:02}_nn_result.csv"))

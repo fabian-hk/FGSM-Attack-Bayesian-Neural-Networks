@@ -1,0 +1,7 @@
+torch
+torchvision
+pyro-ppl
+numpy
+pandas
+matplotlib
+yaml

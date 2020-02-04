@@ -3,9 +3,15 @@ import pyro
 
 from networks import BNNWrapper
 from helper.data_loader import get_train_loader, get_test_loader
+from helper.config import Configuration
 
 
-def train(svi: pyro.infer.SVI, bnn: BNNWrapper, train_loader: torch.utils.data.DataLoader, epoch: int):
+def train(
+    svi: pyro.infer.SVI,
+    bnn: BNNWrapper,
+    train_loader: torch.utils.data.DataLoader,
+    epoch: int,
+):
     for batch_id, (x, y) in enumerate(train_loader):
         x = x.to(bnn.device)
         y = y.to(bnn.device)
@@ -18,7 +24,11 @@ def train(svi: pyro.infer.SVI, bnn: BNNWrapper, train_loader: torch.utils.data.D
             )
 
 
-def test(bnn: BNNWrapper, loss_fn: pyro.infer.Trace_ELBO, test_loader: torch.utils.data.DataLoader):
+def test(
+    bnn: BNNWrapper,
+    loss_fn: pyro.infer.Trace_ELBO,
+    test_loader: torch.utils.data.DataLoader,
+):
     correct = 0.0
     total = 0.0
     test_loss = 0.0
@@ -29,7 +39,9 @@ def test(bnn: BNNWrapper, loss_fn: pyro.infer.Trace_ELBO, test_loader: torch.uti
             mean, var = bnn.predict(x.view(-1, 28 * 28))
             total += y.size(0)
             correct += torch.eq(mean.max(1).indices, y).sum().item()
-            test_loss += loss_fn(bnn.model, bnn.guide, x_data=x.view(-1, 28 * 28), y_data=y)
+            test_loss += loss_fn(
+                bnn.model, bnn.guide, x_data=x.view(-1, 28 * 28), y_data=y
+            )
 
     test_loss /= len(test_loader.dataset)
     print(
@@ -38,6 +50,8 @@ def test(bnn: BNNWrapper, loss_fn: pyro.infer.Trace_ELBO, test_loader: torch.uti
 
 
 def training():
+    config = Configuration()
+
     bnn = BNNWrapper()
 
     optim = pyro.optim.Adam({"lr": 0.01})
@@ -48,8 +62,7 @@ def training():
     train_loader = get_train_loader()
     test_loader = get_test_loader()
 
-    epochs = 5
-    for epoch in range(epochs):
+    for epoch in range(config.bnn_training_epochs):
         train(svi, bnn, train_loader, epoch)
         test(bnn, loss_fn, test_loader)
 

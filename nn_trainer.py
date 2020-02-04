@@ -4,6 +4,7 @@ import torch.optim as optim
 
 from helper.data_loader import get_test_loader, get_train_loader
 from networks import Network
+from helper.config import Configuration
 
 
 def train(net: Network, optimizer: torch.optim.Adam, train_loader: torch.utils.data.DataLoader, epoch: int):
@@ -41,7 +42,7 @@ def test(net: Network, test_loader: torch.utils.data.DataLoader):
 
 
 def training():
-    n_epochs = 2
+    config = Configuration()
 
     net = Network()
     optimizer = optim.Adam(net.parameters(), lr=0.01)
@@ -49,7 +50,7 @@ def training():
     train_loader = get_train_loader()
     test_loader = get_test_loader()
 
-    for epoch in range(n_epochs):
+    for epoch in range(config.nn_training_epochs):
         train(net, optimizer, train_loader, epoch)
         test(net, test_loader)
 
