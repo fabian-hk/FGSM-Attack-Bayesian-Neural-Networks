@@ -15,16 +15,19 @@ You can install all required dependencies with:
 # How it works
 First, you have to train both neural networks. Therefore you have to execute
 the following scripts:
+
 1. [nn_trainer.py](nn_trainer.py) (Accuracy should be around ~96%)
 2. [bnn_trainer.py](bnn_trainer.py) (Accuracy should be around ~89%)
 
 After this, you can run the attack on the MNIST test set. In order to do this
 execute the following scripts:
+
 3. [nn_adversary](nn_adversary.py)
 4. [bnn_adversary](bnn_adversary.py)
 
 Now the results from the attack should be saved as CSV files in the ``data``
 folder. In order to visualize the results run the following script:
+
 5. [visualizer](visualizer.py)
 
 # Results
