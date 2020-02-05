@@ -49,10 +49,10 @@ def std_over_epsilon(bnn_df: pandas.DataFrame, config: Configuration):
     epsilons = config.epsilons
     for epsilon in epsilons:
         corr_eps = bnn_df.loc[
-            (bnn_df["epsilon"] == epsilon) & bnn_df["y"] == bnn_df["y_"]
+            (bnn_df["epsilon"] == epsilon) & (bnn_df["y"] == bnn_df["y_"])
         ]  # type: pandas.DataFrame
         wro_eps = bnn_df.loc[
-            (bnn_df["epsilon"] == epsilon) & bnn_df["y"] != bnn_df["y_"]
+            (bnn_df["epsilon"] == epsilon) & (bnn_df["y"] != bnn_df["y_"])
         ]  # type: pandas.DataFrame
         eps = bnn_df.loc[bnn_df["epsilon"] == epsilon]  # type: pandas.DataFrame
         corr_y.append(corr_eps["std"].mean())
@@ -66,7 +66,7 @@ def std_over_epsilon(bnn_df: pandas.DataFrame, config: Configuration):
     plt.plot(epsilons, wro_y, label="Average wrong STD")
     plt.plot(epsilons, eps_y, label="Average STD")
     plt.xlabel("Epsilon")
-    plt.ylabel("STD")
+    plt.ylabel("Standard Deviation")
     plt.legend()
 
     plot_path = Path(f"data/{config.id:02}_std.svg")

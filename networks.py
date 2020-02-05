@@ -7,6 +7,8 @@ import torch.nn.functional as F
 import pyro
 from pyro.distributions import Normal, Categorical
 
+from helper.config import Configuration
+
 
 class Network(nn.Module):
     def __init__(self, device: Optional[str] = "cpu"):
@@ -20,6 +22,8 @@ class Network(nn.Module):
         self.to(device)
         self.device = device
 
+        self.config = Configuration()
+
     def forward(self, x):
         output = self.fc1(x)
         output = F.relu(output)
@@ -29,14 +33,14 @@ class Network(nn.Module):
     def save_model(self):
         save_path = Path("data/saved_models/")
         save_path.mkdir(exist_ok=True, parents=True)
-        torch.save(self.state_dict(), save_path.joinpath("model.pt"))
+        torch.save(self.state_dict(), save_path.joinpath(f"{self.config.id:02}_model.pt"))
 
     def load_model(self):
         save_path = Path("data/saved_models/")
         if not save_path.exists():
             raise FileExistsError()
 
-        self.load_state_dict(torch.load(save_path.joinpath("model.pt")))
+        self.load_state_dict(torch.load(save_path.joinpath(f"{self.config.id:02}_model.pt")))
 
 
 class BNNWrapper(Network):
@@ -130,14 +134,14 @@ class BNNWrapper(Network):
         # save parameters from the pyro module not pytorch itself
         save_path = Path("data/saved_models/")
         save_path.mkdir(exist_ok=True, parents=True)
-        pyro.get_param_store().save(save_path.joinpath("bnn_params.pr"))
+        pyro.get_param_store().save(save_path.joinpath(f"{self.config.id:02}_bnn_params.pr"))
 
     def load_model(self):
         save_path = Path("data/saved_models/")
         if not save_path.exists():
             raise FileExistsError()
 
-        pyro.get_param_store().load(save_path.joinpath("bnn_params.pr"))
+        pyro.get_param_store().load(save_path.joinpath(f"{self.config.id:02}_bnn_params.pr"))
         pyro.module("module", self, update_module_params=True)
 
 
