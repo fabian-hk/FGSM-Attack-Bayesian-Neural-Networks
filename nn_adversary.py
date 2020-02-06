@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 from pathlib import Path
 
 import pandas
@@ -14,7 +14,7 @@ from helper.config import Configuration
 
 def run_attack(
     net: Network, x: torch.Tensor, y: torch.Tensor, epsilons: List[float], batch_id: int
-) -> pandas.DataFrame:
+) -> Tuple[pandas.DataFrame, List[torch.Tensor]]:
     x = x.to(net.device)
     y = y.to(net.device)
 
@@ -28,10 +28,12 @@ def run_attack(
     data_grad = x.grad.data
 
     tmp_dict = {"id": [], "epsilon": [], "y": [], "y_": []}
+    pertubed_images = []
     for epsilon in epsilons:
-        pertubed_data = fgsm_attack(x, epsilon, data_grad)
+        pertubed_image = fgsm_attack(x, epsilon, data_grad)
+        pertubed_images.append(pertubed_image)
 
-        pred = net(pertubed_data.view(-1, 28 * 28))
+        pred = net(pertubed_image.view(-1, 28 * 28))
 
         y_ = pred.data.max(1).indices.item()
 
@@ -40,7 +42,7 @@ def run_attack(
         tmp_dict["y"].append(y.item())
         tmp_dict["y_"].append(y_)
 
-    return pandas.DataFrame.from_dict(tmp_dict)
+    return pandas.DataFrame.from_dict(tmp_dict), pertubed_images
 
 
 if __name__ == "__main__":
@@ -55,7 +57,8 @@ if __name__ == "__main__":
 
     result = []
     for batch_id, (x, y) in enumerate(test_loader):
-        result.append(run_attack(net, x, y, config.epsilons, batch_id))
+        df, _ = run_attack(net, x, y, config.epsilons, batch_id)
+        result.append(df)
 
         if batch_id % 100 == 0:
             print(f"Step {batch_id}/{len(test_loader.dataset)}")

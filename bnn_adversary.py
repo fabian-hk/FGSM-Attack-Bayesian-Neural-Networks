@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 from pathlib import Path
 
 import pandas
@@ -19,7 +19,7 @@ def run_attack(
     y: torch.Tensor,
     epsilons: List[float],
     batch_id: int,
-) -> pandas.DataFrame:
+) -> Tuple[pandas.DataFrame, List[torch.Tensor]]:
     x = x.to(bnn.device)
     y = y.to(bnn.device)
 
@@ -31,9 +31,11 @@ def run_attack(
     data_grad = x.grad.data
 
     tmp_dict = {"id": [], "epsilon": [], "y": [], "y_": [], "std": []}
+    pertubed_images = []
     for epsilon in epsilons:
-        pertubed_data = fgsm_attack(x, epsilon, data_grad)
-        mean, std = bnn.predict(pertubed_data.view(-1, 28 * 28))
+        pertubed_image = fgsm_attack(x, epsilon, data_grad)
+        pertubed_images.append(pertubed_image)
+        mean, std = bnn.predict(pertubed_image.view(-1, 28 * 28))
 
         y_ = mean.max(1).indices.item()
         std_ = std[0][y_].item()
@@ -44,7 +46,7 @@ def run_attack(
         tmp_dict["y_"].append(y_)
         tmp_dict["std"].append(std_)
 
-    return pandas.DataFrame.from_dict(tmp_dict)
+    return pandas.DataFrame.from_dict(tmp_dict), pertubed_images
 
 
 if __name__ == "__main__":
