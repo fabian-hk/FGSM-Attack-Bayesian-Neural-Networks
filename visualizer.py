@@ -119,9 +119,7 @@ def accuracy_over_epsilon_with_rejection(
     plt.close()
 
 
-def plot_images():
-    config = Configuration()
-
+def plot_images(config: Configuration):
     bnn = BNNWrapper()
     bnn.load_model()
 
@@ -132,28 +130,59 @@ def plot_images():
     nn = Network()
     nn.load_model()
 
-    test_loader = get_test_loader(1, shuffle=False)
-    x, y = test_loader.dataset[3]
-    y = torch.tensor([y])
+    # sample images from the MNIST test data set
+    imgs = [3, 4, 1362, 6930]
 
-    bnn_d, bnn_imgs = bnn_adversary.run_attack(bnn, loss_fn, x, y, config.epsilons, 3)
+    fig, axes = plt.subplots(12, 2 * len(imgs), figsize=(36, 26))
 
-    plt.close()
-    fig, axes = plt.subplots(12, 2)
+    for j, img in enumerate(imgs):
+        test_loader = get_test_loader(1, shuffle=False)
+        x, y = test_loader.dataset[img]
+        y = torch.tensor([y])
 
-    for i in range(12):
-        axes[i][0].imshow(bnn_imgs[i][0].detach(), cmap="gray", vmin=0, vmax=1)
-        axes[i][0].set_xlabel(f"Label: {bnn_d['y'][i]}, Prediction: {bnn_d['y_'][i]}")
+        bnn_d, bnn_imgs = bnn_adversary.run_attack(
+            bnn, loss_fn, x, y, config.epsilons, img
+        )
 
-    nn_d, nn_imgs = nn_adversary.run_attack(nn, x, y, config.epsilons, 3)
+        # font sizes
+        title = 22
+        body = 20
 
-    for i in range(12):
-        axes[i][1].imshow(nn_imgs[i][0].detach(), cmap="gray", vmin=0, vmax=1)
-        axes[i][1].set_xlabel(f"Label: {nn_d['y'][i]}, Prediction: {nn_d['y_'][i]}")
+        index = 2 * j
+        axes[0][index].set_title("Bayesian Neural Network", fontsize=title)
+        for i in range(12):
+            axes[i][index].imshow(
+                bnn_imgs[i][0].cpu().detach(), cmap="gray", vmin=0, vmax=1
+            )
+            axes[i][index].set_xlabel(
+                f"Label: {bnn_d['y'][i]}, Prediction: {bnn_d['y_'][i]}", fontsize=body
+            )
+            axes[i][index].set_ylabel(f"Eps: {bnn_d['epsilon'][i]}", fontsize=body)
+            axes[i][index].set_yticklabels([])
+            axes[i][index].set_xticklabels([])
 
-    fig.subplots_adjust(hspace=3)
+        nn_d, nn_imgs = nn_adversary.run_attack(nn, x, y, config.epsilons, 3)
 
+        index = 2 * j + 1
+        axes[0][index].set_title("Deep Neural Network", fontsize=title)
+        for i in range(12):
+            axes[i][index].imshow(
+                nn_imgs[i][0].cpu().detach(), cmap="gray", vmin=0, vmax=1
+            )
+            axes[i][index].set_xlabel(
+                f"Label: {nn_d['y'][i]}, Prediction: {nn_d['y_'][i]}", fontsize=body
+            )
+            axes[i][index].set_ylabel(f"Eps: {bnn_d['epsilon'][i]}", fontsize=body)
+            axes[i][index].set_yticklabels([])
+            axes[i][index].set_xticklabels([])
+
+    fig.tight_layout()
+    fig.subplots_adjust(hspace=0.5)
+
+    plot_path = Path(f"data/{config.id:02}_example_imgs.svg")
+    plt.savefig(plot_path)
     plt.show()
+    plt.close()
 
 
 def visualize():
@@ -168,8 +197,10 @@ def visualize():
 
     accuracy_over_epsilon_with_rejection(nn_df, bnn_df, config)
 
+    plot_images(config)
+
     config.save()
 
 
 if __name__ == "__main__":
-    plot_images()
+    visualize()
