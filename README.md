@@ -30,6 +30,14 @@ folder. In order to visualize the results run the following script:
 
 5. [visualizer](visualizer.py)
 
+# Visualized Samples
+Here you can see a few examples of images from the MNIST test data set.
+On the left side, you see the epsilon and below the image the label. 
+You can observe that the Bayesian Neural Network is a little bit more 
+robust.
+
+![Sample images](docs/03_example_imgs.svg)
+
 # Results
 In the following graph, you can see the accuracy of both networks in
 dependence of epsilon, the strength of the attack. You can see that

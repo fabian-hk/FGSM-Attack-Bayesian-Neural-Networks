@@ -4,4 +4,4 @@ pyro-ppl
 numpy
 pandas
 matplotlib
-yaml
+PyYAML

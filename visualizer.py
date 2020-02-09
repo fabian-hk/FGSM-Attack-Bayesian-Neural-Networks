@@ -4,7 +4,15 @@ import pandas
 import matplotlib.pyplot as plt
 import numpy as np
 
+import pyro
+import torch
+
 from helper.config import Configuration
+from networks import Network, BNNWrapper
+from helper.data_loader import get_test_loader
+import nn_adversary
+import bnn_adversary
+from helper.utils import img_show
 
 
 def load_dict(name: str) -> pandas.DataFrame:
@@ -111,6 +119,72 @@ def accuracy_over_epsilon_with_rejection(
     plt.close()
 
 
+def plot_images(config: Configuration):
+    bnn = BNNWrapper()
+    bnn.load_model()
+
+    loss_fn = pyro.infer.Trace_ELBO(
+        num_particles=config.bnn_adversary_samples
+    ).differentiable_loss
+
+    nn = Network()
+    nn.load_model()
+
+    # sample images from the MNIST test data set
+    imgs = [3, 4, 1362, 6930]
+
+    fig, axes = plt.subplots(12, 2 * len(imgs), figsize=(36, 26))
+
+    for j, img in enumerate(imgs):
+        test_loader = get_test_loader(1, shuffle=False)
+        x, y = test_loader.dataset[img]
+        y = torch.tensor([y])
+
+        bnn_d, bnn_imgs = bnn_adversary.run_attack(
+            bnn, loss_fn, x, y, config.epsilons, img
+        )
+
+        # font sizes
+        title = 22
+        body = 20
+
+        index = 2 * j
+        axes[0][index].set_title("Bayesian Neural Network", fontsize=title)
+        for i in range(12):
+            axes[i][index].imshow(
+                bnn_imgs[i][0].cpu().detach(), cmap="gray", vmin=0, vmax=1
+            )
+            axes[i][index].set_xlabel(
+                f"Label: {bnn_d['y'][i]}, Prediction: {bnn_d['y_'][i]}", fontsize=body
+            )
+            axes[i][index].set_ylabel(f"Eps: {bnn_d['epsilon'][i]}", fontsize=body)
+            axes[i][index].set_yticklabels([])
+            axes[i][index].set_xticklabels([])
+
+        nn_d, nn_imgs = nn_adversary.run_attack(nn, x, y, config.epsilons, 3)
+
+        index = 2 * j + 1
+        axes[0][index].set_title("Deep Neural Network", fontsize=title)
+        for i in range(12):
+            axes[i][index].imshow(
+                nn_imgs[i][0].cpu().detach(), cmap="gray", vmin=0, vmax=1
+            )
+            axes[i][index].set_xlabel(
+                f"Label: {nn_d['y'][i]}, Prediction: {nn_d['y_'][i]}", fontsize=body
+            )
+            axes[i][index].set_ylabel(f"Eps: {bnn_d['epsilon'][i]}", fontsize=body)
+            axes[i][index].set_yticklabels([])
+            axes[i][index].set_xticklabels([])
+
+    fig.tight_layout()
+    fig.subplots_adjust(hspace=0.5)
+
+    plot_path = Path(f"data/{config.id:02}_example_imgs.svg")
+    plt.savefig(plot_path)
+    plt.show()
+    plt.close()
+
+
 def visualize():
     config = Configuration()
 
@@ -122,6 +196,8 @@ def visualize():
     std_over_epsilon(bnn_df, config)
 
     accuracy_over_epsilon_with_rejection(nn_df, bnn_df, config)
+
+    plot_images(config)
 
     config.save()
 
