@@ -31,8 +31,8 @@ folder. In order to visualize the results run the following script:
 5. [visualizer](visualizer.py)
 
 # Visualized Samples
-Here you can see a few example images from the MNIST test data set.
-On the left side, you see the epsilon and below the image, the label. 
+Here you can see a few examples of images from the MNIST test data set.
+On the left side, you see the epsilon and below the image the label. 
 You can observe that the Bayesian Neural Network is a little bit more 
 robust.
 
