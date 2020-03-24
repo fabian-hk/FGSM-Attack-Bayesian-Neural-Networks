@@ -12,7 +12,6 @@ from networks import Network, BNNWrapper
 from helper.data_loader import get_test_loader
 import nn_adversary
 import bnn_adversary
-from helper.utils import img_show
 
 
 def load_dict(name: str) -> pandas.DataFrame:
@@ -140,7 +139,7 @@ def plot_images(config: Configuration):
         x, y = test_loader.dataset[img]
         y = torch.tensor([y])
 
-        bnn_d, bnn_imgs = bnn_adversary.run_attack(
+        bnn_d, bnn_imgs, _ = bnn_adversary.run_attack(
             bnn, loss_fn, x, y, config.epsilons, img
         )
 
@@ -161,7 +160,7 @@ def plot_images(config: Configuration):
             axes[i][index].set_yticklabels([])
             axes[i][index].set_xticklabels([])
 
-        nn_d, nn_imgs = nn_adversary.run_attack(nn, x, y, config.epsilons, 3)
+        nn_d, nn_imgs, _ = nn_adversary.run_attack(nn, x, y, config.epsilons, 3)
 
         index = 2 * j + 1
         axes[0][index].set_title("Deep Neural Network", fontsize=title)

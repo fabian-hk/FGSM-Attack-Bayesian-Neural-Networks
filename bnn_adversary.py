@@ -19,7 +19,7 @@ def run_attack(
     y: torch.Tensor,
     epsilons: List[float],
     batch_id: int,
-) -> Tuple[pandas.DataFrame, List[torch.Tensor]]:
+) -> Tuple[pandas.DataFrame, List[torch.Tensor], List[torch.Tensor]]:
     x = x.to(bnn.device)
     y = y.to(bnn.device)
 
@@ -32,9 +32,11 @@ def run_attack(
 
     tmp_dict = {"id": [], "epsilon": [], "y": [], "y_": [], "std": []}
     pertubed_images = []
+    pertubation = []
     for epsilon in epsilons:
-        pertubed_image = fgsm_attack(x, epsilon, data_grad)
+        pertubed_image, pert = fgsm_attack(x, epsilon, data_grad)
         pertubed_images.append(pertubed_image)
+        pertubation.append(pert)
         mean, std = bnn.predict(pertubed_image.view(-1, 28 * 28))
 
         y_ = mean.max(1).indices.item()
@@ -46,7 +48,7 @@ def run_attack(
         tmp_dict["y_"].append(y_)
         tmp_dict["std"].append(std_)
 
-    return pandas.DataFrame.from_dict(tmp_dict), pertubed_images
+    return pandas.DataFrame.from_dict(tmp_dict), pertubed_images, pertubation
 
 
 if __name__ == "__main__":

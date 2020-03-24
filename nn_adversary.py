@@ -14,7 +14,7 @@ from helper.config import Configuration
 
 def run_attack(
     net: Network, x: torch.Tensor, y: torch.Tensor, epsilons: List[float], batch_id: int
-) -> Tuple[pandas.DataFrame, List[torch.Tensor]]:
+) -> Tuple[pandas.DataFrame, List[torch.Tensor], List[torch.Tensor]]:
     x = x.to(net.device)
     y = y.to(net.device)
 
@@ -29,9 +29,11 @@ def run_attack(
 
     tmp_dict = {"id": [], "epsilon": [], "y": [], "y_": []}
     pertubed_images = []
+    pertubation = []
     for epsilon in epsilons:
-        pertubed_image = fgsm_attack(x, epsilon, data_grad)
+        pertubed_image, pert = fgsm_attack(x, epsilon, data_grad)
         pertubed_images.append(pertubed_image)
+        pertubation.append(pert)
 
         pred = net(pertubed_image.view(-1, 28 * 28))
 
@@ -42,7 +44,7 @@ def run_attack(
         tmp_dict["y"].append(y.item())
         tmp_dict["y_"].append(y_)
 
-    return pandas.DataFrame.from_dict(tmp_dict), pertubed_images
+    return pandas.DataFrame.from_dict(tmp_dict), pertubed_images, pertubation
 
 
 if __name__ == "__main__":
