@@ -6,28 +6,34 @@ from helper.config import Configuration
 from helper.data_loader import get_test_loader
 from helper import utils
 
-config = Configuration()
 
-image_id = 1362
+def main():
+    config = Configuration()
 
-nn = Network()
-nn.load_model()
+    image_id = 1362
 
-test_loader = get_test_loader(1, shuffle=False)
-x, y = test_loader.dataset[image_id]
+    nn = Network()
+    nn.load_model()
 
-y = torch.tensor([y])
+    test_loader = get_test_loader(1, shuffle=False)
+    x, y = test_loader.dataset[image_id]
 
-nn_d, nn_imgs, nn_pertubation_imgs = nn_adversary.run_attack(
-    nn, x, y, config.epsilons, 3
-)
+    y = torch.tensor([y])
 
-id = 2
+    nn_d, nn_imgs, nn_pertubation_imgs = nn_adversary.run_attack(
+        nn, x, y, config.epsilons, 3
+    )
 
-utils.img_show(x, f"Image, NN Prediction: {nn_d.iloc[0]['y_']}")
-utils.img_show(
-    nn_pertubation_imgs[id].cpu(), f"Noise (epsilon: {nn_d.iloc[id]['epsilon']})"
-)
-utils.img_show(
-    nn_imgs[id].cpu(), f"Noise added to image, Prediction: {nn_d.iloc[id]['y_']}"
-)
+    id = 2
+
+    utils.img_show(x, f"Image, NN Prediction: {nn_d.iloc[0]['y_']}")
+    utils.img_show(
+        nn_pertubation_imgs[id].cpu(), f"Noise (epsilon: {nn_d.iloc[id]['epsilon']})"
+    )
+    utils.img_show(
+        nn_imgs[id].cpu(), f"Noise added to image, Prediction: {nn_d.iloc[id]['y_']}"
+    )
+
+
+if __name__ == "__main__":
+    main()

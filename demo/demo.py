@@ -8,46 +8,55 @@ from helper.config import Configuration
 from helper.data_loader import get_test_loader
 from helper import utils
 
-config = Configuration()
 
-image_id = 1362
+def main():
+    config = Configuration()
 
-bnn = BNNWrapper()
-bnn.load_model()
+    image_id = 1362
 
-loss_fn = pyro.infer.Trace_ELBO(
-    num_particles=config.bnn_adversary_samples
-).differentiable_loss
+    bnn = BNNWrapper()
+    bnn.load_model()
 
-nn = Network()
-nn.load_model()
+    loss_fn = pyro.infer.Trace_ELBO(
+        num_particles=config.bnn_adversary_samples
+    ).differentiable_loss
 
-test_loader = get_test_loader(1, shuffle=False)
-x, y = test_loader.dataset[image_id]
+    nn = Network()
+    nn.load_model()
 
-y = torch.tensor([y])
+    test_loader = get_test_loader(1, shuffle=False)
+    x, y = test_loader.dataset[image_id]
 
-bnn_d, bnn_imgs, bnn_pertubation_imgs = bnn_adversary.run_attack(
-    bnn, loss_fn, x, y, config.epsilons, image_id
-)
+    y = torch.tensor([y])
 
-nn_d, nn_imgs, nn_pertubation_imgs = nn_adversary.run_attack(
-    nn, x, y, config.epsilons, 3
-)
-
-ids = [2, 5]
-
-utils.img_show(x, f"Image, BNN Prediction: {bnn_d.iloc[0]['y_']}, NN Prediction: {nn_d.iloc[0]['y_']}")
-for id in ids:
-    utils.img_two_show(
-        bnn_pertubation_imgs[id].cpu(),
-        f"BNN Noise (epsilon: {bnn_d.iloc[id]['epsilon']})",
-        nn_pertubation_imgs[id].cpu(),
-        f"NN Noise (epsilon: {bnn_d.iloc[id]['epsilon']})",
+    bnn_d, bnn_imgs, bnn_pertubation_imgs = bnn_adversary.run_attack(
+        bnn, loss_fn, x, y, config.epsilons, image_id
     )
-    utils.img_two_show(
-        bnn_imgs[id].cpu(),
-        f"Noise added to image, BNN Prediction: {bnn_d.iloc[id]['y_']}",
-        nn_imgs[id].cpu(),
-        f"Noise added to image, NN Prediction: {nn_d.iloc[id]['y_']}",
+
+    nn_d, nn_imgs, nn_pertubation_imgs = nn_adversary.run_attack(
+        nn, x, y, config.epsilons, 3
     )
+
+    ids = [2, 5]
+
+    utils.img_show(
+        x,
+        f"Image, BNN Prediction: {bnn_d.iloc[0]['y_']}, NN Prediction: {nn_d.iloc[0]['y_']}",
+    )
+    for id in ids:
+        utils.img_two_show(
+            bnn_pertubation_imgs[id].cpu(),
+            f"BNN Noise (epsilon: {bnn_d.iloc[id]['epsilon']})",
+            nn_pertubation_imgs[id].cpu(),
+            f"NN Noise (epsilon: {bnn_d.iloc[id]['epsilon']})",
+        )
+        utils.img_two_show(
+            bnn_imgs[id].cpu(),
+            f"Noise added to image, BNN Prediction: {bnn_d.iloc[id]['y_']}",
+            nn_imgs[id].cpu(),
+            f"Noise added to image, NN Prediction: {nn_d.iloc[id]['y_']}",
+        )
+
+
+if __name__ == "__main__":
+    main()
